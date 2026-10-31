@@ -1,0 +1,26 @@
+{
+  "name": "elderly-reminder",
+  "version": "1.0.0",
+  "description": "一个无需安装依赖、可离线使用的中文网页提醒器，适合老年人在手机或电脑上使用。",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jinghua65/elderly-reminder.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jinghua65/elderly-reminder/issues"
+  },
+  "homepage": "https://github.com/jinghua65/elderly-reminder#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0"
+  }
+}
