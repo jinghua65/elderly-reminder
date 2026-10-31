@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#15583f" />
+    <meta
+      name="description"
+      content="为老年人设计的按时服药、按顺序记录和久坐活动提醒网页。"
+    />
+    <title>安心提醒｜吃药与活动提醒</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img">
+            <path d="M7 3h10v3h2a2 2 0 0 1 2 2v13H3V8a2 2 0 0 1 2-2h2V3Zm2 3h6V5H9v1Zm-2 5v2h2v-2H7Zm0 4v2h2v-2H7Zm4-4v2h6v-2h-6Zm0 4v2h6v-2h-6Z" />
+          </svg>
+        </span>
+        <div>
+          <p class="brand-title">安心提醒</p>
+          <p class="brand-subtitle">吃药不遗漏 · 久坐要活动</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="clock" aria-label="当前日期和时间">
+          <strong id="liveTime">--:--:--</strong>
+          <span id="liveDate">正在读取日期</span>
+        </div>
+        <button class="button button-secondary button-small" id="notifyButton" type="button">
+          开启通知
+        </button>
+        <button class="button button-dark button-small" id="settingsButton" type="button">
+          提醒设置
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content" class="page-shell">
+      <section class="setup-banner" id="setupBanner" hidden>
+        <span class="setup-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>请先设置真实用药计划</strong>
+          <p>当前页面尚未保存您的药品、剂量和时间。请按医生处方填写后再使用。</p>
+        </div>
+        <button class="button button-warning" id="setupButton" type="button">现在设置</button>
+      </section>
+
+      <section class="status-panel" id="statusPanel" aria-labelledby="mainStatus">
+        <div class="status-copy">
+          <p class="status-eyebrow" id="statusEyebrow">正在准备今天的提醒</p>
+          <h1 id="mainStatus">请稍候</h1>
+          <p class="status-detail" id="mainDetail">正在读取本地提醒记录。</p>
+          <div class="main-action" id="mainAction"></div>
+        </div>
+        <div class="progress-orb" id="progressOrb" aria-label="今日服药完成进度">
+          <strong id="progressNumber">0/0</strong>
+          <span>今日已记录</span>
+        </div>
+      </section>
+
+      <div class="dashboard">
+        <section class="card medication-card" aria-labelledby="medicationTitle">
+          <div class="card-heading">
+            <div>
+              <p class="section-label">今天</p>
+              <h2 id="medicationTitle">服药顺序</h2>
+            </div>
+            <p class="progress-text" id="medicationProgress">0 / 0 已完成</p>
+          </div>
+          <p class="card-intro">
+            请从第一项开始，服完一种再记录一种。已记录的项目不会再次提醒。
+          </p>
+          <ol class="medication-list" id="medicationList"></ol>
+        </section>
+
+        <section class="card activity-card" id="activityCard" aria-labelledby="activityTitle">
+          <div class="activity-illustration" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" />
+              <path d="M48 43a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-7 12 8-5 9 14 13 5-3 8-17-7-6-9-4 14 12 10-4 8-16-13-2-16 10-9Zm20 29 9 15-7 4-12-19 10-6Z" />
+            </svg>
+          </div>
+          <p class="section-label">活动一下</p>
+          <h2 id="activityTitle">久坐提醒</h2>
+          <p class="activity-status" id="activityStatus">正在计算下一次活动时间。</p>
+          <div class="activity-countdown" id="activityCountdown" aria-live="polite">--:--</div>
+          <p class="activity-hint" id="activityHint">起来走走、伸展腿脚，会更舒服。</p>
+          <div class="activity-actions">
+            <button class="button button-primary button-wide" id="activityDoneButton" type="button">
+              我已起来活动
+            </button>
+            <button class="text-button" id="activitySnoozeButton" type="button">
+              10 分钟后提醒我
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <aside class="safety-note" aria-label="使用说明">
+        <strong>请留意</strong>
+        <p>
+          本网页只帮助记录和提醒，不提供用药建议。药品、剂量和时间必须按医生处方填写。网页关闭后不会弹窗提醒，请保持页面打开。
+        </p>
+      </aside>
+    </main>
+
+    <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+      <form id="settingsForm" novalidate>
+        <div class="dialog-heading">
+          <div>
+            <p class="section-label">个人提醒</p>
+            <h2 id="settingsTitle">提醒设置</h2>
+          </div>
+          <button class="icon-button" id="closeSettingsButton" type="button" aria-label="关闭设置">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="dialog-notice" id="settingsNotice">
+          请按照医生处方填写。示例文字不能代替真实药品和剂量。
+        </p>
+
+        <fieldset class="settings-section">
+          <legend>用药计划</legend>
+          <p class="field-help">
+            按时间自动排序；时间相同时，按下面列表的先后顺序提醒。
+          </p>
+          <div class="med-editor-list" id="medEditorList"></div>
+          <button class="button button-secondary" id="addMedicationButton" type="button">
+            ＋ 添加一种药
+          </button>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>久坐活动提醒</legend>
+          <label class="field-label" for="activityInterval">每隔多久提醒一次</label>
+          <select id="activityInterval" class="field-input">
+            <option value="30">30 分钟</option>
+            <option value="45">45 分钟（推荐）</option>
+            <option value="60">60 分钟</option>
+            <option value="90">90 分钟</option>
+          </select>
+          <label class="switch-row">
+            <input id="sittingEnabled" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+            <span>
+              <strong>开启久坐提醒</strong>
+              <small>到时间后提示起身活动</small>
+            </span>
+          </label>
+        </fieldset>
+
+        <fieldset class="settings-section">
+          <legend>提醒方式</legend>
+          <label class="switch-row">
+            <input id="voiceEnabled" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+            <span>
+              <strong>语音朗读提醒</strong>
+              <small>需要设备支持中文语音</small>
+            </span>
+          </label>
+          <label class="switch-row">
+            <input id="soundEnabled" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+            <span>
+              <strong>提示音</strong>
+              <small>到时间时播放清脆提示音</small>
+            </span>
+          </label>
+          <label class="switch-row">
+            <input id="notificationsEnabled" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+            <span>
+              <strong>浏览器弹窗通知</strong>
+              <small>页面在后台时也能看到提醒</small>
+            </span>
+          </label>
+          <button class="text-button align-left" id="permissionButton" type="button">
+            检查并开启浏览器通知权限
+          </button>
+        </fieldset>
+
+        <div class="dialog-actions">
+          <button class="button button-primary" type="submit">保存设置</button>
+          <button class="button button-secondary" id="cancelSettingsButton" type="button">
+            取消
+          </button>
+        </div>
+
+        <div class="data-actions">
+          <button class="text-button danger-text" id="resetTodayButton" type="button">
+            清空今天的服药记录
+          </button>
+          <button class="text-button danger-text" id="resetAllButton" type="button">
+            清除全部数据
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="confirmDialog" aria-labelledby="confirmTitle">
+      <h2 id="confirmTitle">请确认</h2>
+      <p id="confirmMessage"></p>
+      <div class="dialog-actions">
+        <button class="button button-danger" id="confirmYesButton" type="button">确认</button>
+        <button class="button button-secondary" id="confirmNoButton" type="button">取消</button>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      <span id="toastMessage"></span>
+      <button class="toast-action" id="toastAction" type="button" hidden></button>
+      <button class="toast-close" id="toastClose" type="button" aria-label="关闭提示">×</button>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
