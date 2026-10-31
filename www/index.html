@@ -225,3 +225,82 @@
     <script src="app.js"></script>
   </body>
 </html>
+<!-- ====== 引导功能开始 ====== -->
+<style>
+  #guide-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #ffffff; z-index: 9999; display: flex;
+    flex-direction: column; justify-content: center; align-items: center;
+    padding: 20px; text-align: center; transition: opacity 0.5s;
+  }
+  .guide-icon { font-size: 70px; margin-bottom: 20px; }
+  .guide-title { font-size: 28px; font-weight: bold; margin-bottom: 15px; color: #333; }
+  .guide-desc { font-size: 20px; color: #555; line-height: 1.6; margin-bottom: 40px; }
+  .guide-btn {
+    background: #2563eb; color: white; border: none; padding: 15px 40px;
+    font-size: 22px; border-radius: 50px; width: 100%; max-width: 280px;
+    font-weight: bold; box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+  }
+  .guide-dots { display: flex; gap: 10px; margin-bottom: 30px; }
+  .guide-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
+  .guide-dot.active { background: #2563eb; width: 20px; border-radius: 5px; }
+</style>
+
+<div id="guide-overlay">
+  <div class="guide-icon" id="g-icon">👋</div>
+  <div class="guide-title" id="g-title">欢迎使用安心提醒</div>
+  <div class="guide-desc" id="g-desc">这是专为老年人设计的吃药与活动提醒小助手。</div>
+  <div class="guide-dots" id="g-dots"></div>
+  <button class="guide-btn" id="g-btn" onclick="nextGuideStep()">下一步</button>
+</div>
+
+<script>
+  const guideSteps = [
+    { icon: "👋", title: "欢迎使用安心提醒", desc: "这是专为老年人设计的吃药与活动提醒小助手。" },
+    { icon: "⏰", title: "按时提醒", desc: "设定时间后，我们会用大字和声音提醒您按时吃药。" },
+    { icon: "🆘", title: "紧急联系", desc: "遇到特殊情况，一键联系家人或医生。现在开始体验吧！" }
+  ];
+  let currentGuideStep = 0;
+
+  function updateGuideUI() {
+    const step = guideSteps[currentGuideStep];
+    document.getElementById('g-icon').innerText = step.icon;
+    document.getElementById('g-title').innerText = step.title;
+    document.getElementById('g-desc').innerText = step.desc;
+    
+    const dotsContainer = document.getElementById('g-dots');
+    dotsContainer.innerHTML = '';
+    for(let i=0; i<guideSteps.length; i++) {
+      let dot = document.createElement('div');
+      dot.className = 'guide-dot' + (i === currentGuideStep ? ' active' : '');
+      dotsContainer.appendChild(dot);
+    }
+
+    if(currentGuideStep === guideSteps.length - 1) {
+      document.getElementById('g-btn').innerText = "开始使用";
+    } else {
+      document.getElementById('g-btn').innerText = "下一步";
+    }
+  }
+
+  function nextGuideStep() {
+    if(currentGuideStep < guideSteps.length - 1) {
+      currentGuideStep++;
+      updateGuideUI();
+    } else {
+      localStorage.setItem('hasSeenGuide', 'true');
+      const overlay = document.getElementById('guide-overlay');
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.style.display = 'none'; }, 500);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    if(localStorage.getItem('hasSeenGuide') === 'true') {
+      document.getElementById('guide-overlay').style.display = 'none';
+    } else {
+      updateGuideUI();
+    }
+  });
+</script>
+<!-- ====== 引导功能结束 ====== -->
