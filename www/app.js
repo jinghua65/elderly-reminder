@@ -96,36 +96,27 @@ function nextGuideStep() {
   }
 }
 
-// ================= 3. 语音播报引擎 (调用原生插件) =================
-function speakText(text) {
-    // 优先调用 Capacitor 原生 TTS 插件
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech) {
-        window.Capacitor.Plugins.TextToSpeech.speak({
-            text: text,
-            lang: 'zh-CN',
-            rate: 0.85,
-            pitch: 1.0,
-            volume: 1.0,
-        }).catch(e => console.log('原生 TTS 播放失败:', e));
-    } 
-    // 备用方案：网页原生 API
-    else if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN';
-        utterance.rate = 0.85;
-        utterance.volume = 1;
-        window.speechSynthesis.speak(utterance);
-    }
-}
-
-// ================= 4. 八段锦逻辑 =================
+// ================= 3. 八段锦及语音播放核心逻辑 =================
 const bdjSteps = [
-    { title: "第一式：双手托天理三焦", icon: "🙆‍♂️", desc: "双手交叉，向上托举，拉伸腰背。慢慢吸气，慢慢呼气。", voice: "第一式，双手托天理三焦。吸气，双手上托。呼气，双手下落。" },
-    { title: "第二式：左右开弓似射雕", icon: "🏹", desc: "双脚分开，像拉弓一样左右伸展，帮助活动肩颈。", voice: "第二式，左右开弓似射雕。扎马步，吸气拉弓。呼气收势。" },
-    { title: "第三式：背后七颠百病消", icon: "🧍‍♂️", desc: "双脚并拢，脚跟踮起，轻轻震动身体，放松全身。", voice: "第三式，背后七颠百病消。吸气踮起脚跟，呼气轻轻落地。" }
+    { title: "第一式：双手托天理三焦", icon: "🙆‍♂️", desc: "双手交叉，向上托举，拉伸腰背。慢慢吸气，慢慢呼气。" },
+    { title: "第二式：左右开弓似射雕", icon: "🏹", desc: "双脚分开，像拉弓一样左右伸展，帮助活动肩颈。" },
+    { title: "第三式：背后七颠百病消", icon: "🧍‍♂️", desc: "双脚并拢，脚跟踮起，轻轻震动身体，放松全身。" }
 ];
 let currentBdjStep = 0;
+
+// 终极方案：播放本地 MP3 语音口令
+function playVoice(stepNumber) {
+    const currentVoice = document.getElementById('bdj-voice');
+    if (currentVoice) {
+        currentVoice.pause();
+        currentVoice.currentTime = 0;
+    }
+    
+    const voiceAudio = new Audio(`music/step${stepNumber}.mp3`);
+    voiceAudio.id = 'bdj-voice';
+    voiceAudio.volume = 1.0; // 语音音量最大
+    voiceAudio.play().catch(e => console.log("语音播放被拦截:", e));
+}
 
 function startBaduanjin() {
     currentBdjStep = 0;
@@ -135,10 +126,12 @@ function startBaduanjin() {
     const audio = document.getElementById('bdj-music');
     if (audio) {
         audio.currentTime = 0; 
-        audio.volume = 0.4; 
-        audio.play().catch(e => console.log("播放失败:", e)); 
+        audio.volume = 0.3; // 背景音乐音量压低到30%
+        audio.play().catch(e => console.log("背景音乐播放失败:", e)); 
     }
-    speakText(bdjSteps[currentBdjStep].voice);
+    
+    // 播放第一式语音
+    setTimeout(() => { playVoice(1); }, 200); 
 }
 
 function updateBdjUI() {
@@ -155,7 +148,7 @@ function nextBaduanjin() {
     if (currentBdjStep < bdjSteps.length - 1) {
         currentBdjStep++;
         updateBdjUI();
-        speakText(bdjSteps[currentBdjStep].voice); 
+        playVoice(currentBdjStep + 1); 
     } else {
         closeBaduanjin();
     }
@@ -170,15 +163,17 @@ function closeBaduanjin() {
         audio.currentTime = 0;
     }
     
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    const currentVoice = document.getElementById('bdj-voice');
+    if (currentVoice) {
+        currentVoice.pause();
+        currentVoice.currentTime = 0;
     }
     
     startSedentaryTimer(); 
 }
 
-// ================= 5. 久坐定时器 =================
-const SEDENTARY_TIME = 60 * 1000; 
+// ================= 4. 久坐定时器 =================
+const SEDENTARY_TIME = 60 * 1000; // 测试60秒，上线改 45 * 60 * 1000
 let sedentaryTimer;
 
 function startSedentaryTimer() {
@@ -193,7 +188,7 @@ function startSedentaryTimer() {
     }, SEDENTARY_TIME);
 }
 
-// ================= 6. 初始化 =================
+// ================= 5. 初始化 =================
 window.addEventListener('load', () => {
     if(localStorage.getItem('hasSeenGuide') === 'true') {
         document.getElementById('guide-overlay').style.display = 'none';
