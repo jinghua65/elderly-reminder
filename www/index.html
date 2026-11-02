@@ -6,14 +6,28 @@
     <title>安心提醒</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: sans-serif; background-color: #f8fafc; color: #1e293b; height: 100vh; overflow: hidden; }
+        body { font-family: sans-serif; background-color: #f8fafc; color: #1e293b; height: 100vh; overflow-y: auto; }
         .main-content { padding: 24px; display: none; }
-        .main-content h1 { font-size: 28px; margin-bottom: 20px; color: #2563eb; text-align: center; }
+        .main-title { font-size: 28px; margin-bottom: 20px; color: #2563eb; text-align: center; font-weight: bold; }
+        
         .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card h2 { font-size: 22px; margin-bottom: 10px; }
+        .card h2 { font-size: 22px; margin-bottom: 10px; color: #1e293b;}
         .card p { font-size: 18px; color: #475569; line-height: 1.5; }
         
-        /* ======== 引导层样式 ======== */
+        /* 表单样式 */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 18px; margin-bottom: 5px; color: #333; }
+        .form-group input { width: 100%; padding: 12px; font-size: 18px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .btn-save { width: 100%; padding: 15px; font-size: 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+
+        /* 药品列表样式 */
+        .med-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
+        .med-item:last-child { border-bottom: none; }
+        .med-info h3 { font-size: 20px; color: #333; margin-bottom: 5px; }
+        .med-info p { font-size: 16px; color: #666; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 16px; }
+
+        /* 引导层样式 */
         #guide-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; z-index: 9999; display: flex;
@@ -23,16 +37,12 @@
         .guide-icon { font-size: 70px; margin-bottom: 20px; }
         .guide-title { font-size: 28px; font-weight: bold; margin-bottom: 15px; color: #333; }
         .guide-desc { font-size: 20px; color: #555; line-height: 1.6; margin-bottom: 40px; }
-        .guide-btn {
-            background: #2563eb; color: white; border: none; padding: 15px 40px;
-            font-size: 22px; border-radius: 50px; width: 100%; max-width: 280px;
-            font-weight: bold; box-shadow: 0 4px 10px rgba(37,99,235,0.3);
-        }
+        .guide-btn { background: #2563eb; color: white; border: none; padding: 15px 40px; font-size: 22px; border-radius: 50px; width: 100%; max-width: 280px; font-weight: bold; box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
         .guide-dots { display: flex; gap: 10px; margin-bottom: 30px; }
         .guide-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
         .guide-dot.active { background: #2563eb; width: 20px; border-radius: 5px; }
 
-        /* ======== 八段锦弹窗样式 ======== */
+        /* 八段锦弹窗样式 */
         #baduanjin-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 10000; flex-direction: column; justify-content: center; align-items: center;
@@ -41,10 +51,7 @@
         .bdj-title { font-size: 32px; color: #10b981; margin-bottom: 20px; font-weight: bold; }
         .bdj-icon { font-size: 100px; margin-bottom: 30px; }
         .bdj-desc { font-size: 22px; color: #333; line-height: 1.6; margin-bottom: 40px; }
-        .bdj-btn {
-            background: #10b981; color: white; border: none; padding: 18px; font-size: 24px;
-            border-radius: 50px; width: 100%; max-width: 300px; font-weight: bold;
-        }
+        .bdj-btn { background: #10b981; color: white; border: none; padding: 18px; font-size: 24px; border-radius: 50px; width: 100%; max-width: 300px; font-weight: bold; }
         .bdj-close { margin-top: 20px; background: transparent; color: #666; border: none; font-size: 18px; text-decoration: underline; }
     </style>
 </head>
@@ -52,15 +59,39 @@
 
     <!-- 主页面内容 -->
     <div class="main-content" id="app-content">
-        <h1>安心提醒</h1>
+        <div class="main-title">安心提醒</div>
+        
+        <!-- 药品列表 -->
         <div class="card">
-            <h2>💊 早上 8:00</h2>
-            <p>该吃降压药了，记得喝温水。</p>
+            <h2>💊 我的吃药计划</h2>
+            <div id="med-list">
+                <!-- 动态渲染药品 -->
+            </div>
         </div>
+
+        <!-- 添加药品表单 -->
+        <div class="card">
+            <h2>➕ 添加新提醒</h2>
+            <div class="form-group">
+                <label>药品名称</label>
+                <input type="text" id="input-name" placeholder="例如：降压药">
+            </div>
+            <div class="form-group">
+                <label>用量 / 次数</label>
+                <input type="text" id="input-dose" placeholder="例如：1片 / 每日2次">
+            </div>
+            <div class="form-group">
+                <label>时间</label>
+                <input type="time" id="input-time" value="08:00">
+            </div>
+            <button class="btn-save" onclick="addMedication()">保存提醒</button>
+        </div>
+
+        <!-- 八段锦入口 -->
         <div class="card" style="border-left: 6px solid #10b981;">
             <h2>🧘 活动时间</h2>
-            <p>坐了很久了，起来做做八段锦，舒展一下筋骨吧。</p>
-            <button onclick="startBaduanjin()" style="margin-top: 10px; padding: 12px; font-size: 18px; background: #10b981; color: white; border: none; border-radius: 8px; width: 100%; font-weight: bold;">开始做操</button>
+            <p>久坐伤身，起来做做八段锦，舒展一下筋骨吧。</p>
+            <button onclick="startBaduanjin()" style="margin-top: 15px; padding: 15px; font-size: 20px; background: #10b981; color: white; border: none; border-radius: 8px; width: 100%; font-weight: bold;">开始做操</button>
         </div>
     </div>
 
