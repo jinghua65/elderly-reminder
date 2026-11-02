@@ -77,26 +77,24 @@ function nextGuideStep() {
   }
 }
 
-// ================= 3. 八段锦与网页原生语音 =================
+// ================= 3. 八段锦及在线语音播放 =================
 const bdjSteps = [
-    { title: "第一式：双手托天理三焦", icon: "🙆‍♂️", desc: "双手交叉，向上托举。", voice: "第一式，双手托天理三焦。吸气，上托。呼气，下落。" },
-    { title: "第二式：左右开弓似射雕", icon: "🏹", desc: "像拉弓一样左右伸展。", voice: "第二式，左右开弓似射雕。扎马步，吸气拉弓。" },
-    { title: "第三式：背后七颠百病消", icon: "🧍‍♂️", desc: "脚跟踮起，轻轻震动。", voice: "第三式，背后七颠百病消。吸气踮脚，呼气落地。" }
+    { title: "第一式：双手托天理三焦", icon: "🙆‍♂️", desc: "双手交叉，向上托举。", url: "https://dict.youdao.com/dictvoice?audio=第一式，双手托天理三焦。吸气，上托。呼气，下落。&type=2" },
+    { title: "第二式：左右开弓似射雕", icon: "🏹", desc: "像拉弓一样左右伸展。", url: "https://dict.youdao.com/dictvoice?audio=第二式，左右开弓似射雕。扎马步，吸气拉弓。&type=2" },
+    { title: "第三式：背后七颠百病消", icon: "🧍‍♂️", desc: "脚跟踮起，轻轻震动。", url: "https://dict.youdao.com/dictvoice?audio=第三式，背后七颠百病消。吸气踮脚，呼气落地。&type=2" }
 ];
 let currentBdjStep = 0;
 
-// 核心：网页原生语音
-function playWebSpeech(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // 先停止之前的
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN'; // 中文
-        utterance.rate = 0.9;     // 语速稍微放慢
-        utterance.volume = 1.0;   // 音量最大
-        window.speechSynthesis.speak(utterance);
-    } else {
-        alert("当前手机不支持网页语音");
+// 播放在线语音
+function playVoice(url) {
+    const currentVoice = document.getElementById('bdj-voice');
+    if (currentVoice) {
+        currentVoice.pause();
     }
+    const voiceAudio = new Audio(url);
+    voiceAudio.id = 'bdj-voice';
+    voiceAudio.volume = 1.0; 
+    voiceAudio.play().catch(e => console.log("语音网络请求失败", e));
 }
 
 function startBaduanjin() {
@@ -107,11 +105,12 @@ function startBaduanjin() {
     const audio = document.getElementById('bdj-music');
     if (audio) {
         audio.currentTime = 0; 
-        audio.volume = 0.3; // 音乐压低
+        audio.volume = 0.3; 
         audio.play().catch(e => console.log("音乐播放失败")); 
     }
-    // 延时一下，让音乐先起，再播语音
-    setTimeout(() => { playWebSpeech(bdjSteps[currentBdjStep].voice); }, 500);
+    
+    // 延时一点，等音乐起来再播语音
+    setTimeout(() => { playVoice(bdjSteps[currentBdjStep].url); }, 300);
 }
 
 function updateBdjUI() {
@@ -127,7 +126,7 @@ function nextBaduanjin() {
     if (currentBdjStep < bdjSteps.length - 1) {
         currentBdjStep++;
         updateBdjUI();
-        playWebSpeech(bdjSteps[currentBdjStep].voice); 
+        playVoice(bdjSteps[currentBdjStep].url); 
     } else {
         closeBaduanjin();
     }
@@ -137,7 +136,10 @@ function closeBaduanjin() {
     document.getElementById('baduanjin-overlay').style.display = 'none';
     const audio = document.getElementById('bdj-music');
     if (audio) { audio.pause(); audio.currentTime = 0; }
-    if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+    
+    const currentVoice = document.getElementById('bdj-voice');
+    if (currentVoice) { currentVoice.pause(); }
+    
     startSedentaryTimer(); 
 }
 
