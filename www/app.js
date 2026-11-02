@@ -1,8 +1,66 @@
-// ================= 1. 首屏引导逻辑 =================
+// ================= 1. 药品管理逻辑 =================
+function renderMedications() {
+    const listContainer = document.getElementById('med-list');
+    const meds = JSON.parse(localStorage.getItem('medications') || '[]');
+    
+    if(meds.length === 0) {
+        listContainer.innerHTML = '<p style="font-size:16px; color:#888;">暂无提醒，请添加。</p>';
+        return;
+    }
+    
+    listContainer.innerHTML = '';
+    meds.forEach((med, index) => {
+        const item = document.createElement('div');
+        item.className = 'med-item';
+        item.innerHTML = `
+            <div class="med-info">
+                <h3>⏰ ${med.time} - ${med.name}</h3>
+                <p>用量：${med.dose}</p>
+            </div>
+            <button class="btn-delete" onclick="deleteMedication(${index})">删除</button>
+        `;
+        listContainer.appendChild(item);
+    });
+}
+
+function addMedication() {
+    const name = document.getElementById('input-name').value.trim();
+    const dose = document.getElementById('input-dose').value.trim();
+    const time = document.getElementById('input-time').value;
+    
+    if(!name || !dose) {
+        alert("请填写完整的药品名称和用量！");
+        return;
+    }
+    
+    const meds = JSON.parse(localStorage.getItem('medications') || '[]');
+    meds.push({ name, dose, time });
+    // 按时间排序
+    meds.sort((a, b) => a.time.localeCompare(b.time));
+    localStorage.setItem('medications', JSON.stringify(meds));
+    
+    // 清空输入框
+    document.getElementById('input-name').value = '';
+    document.getElementById('input-dose').value = '';
+    
+    renderMedications();
+    alert("提醒保存成功！");
+}
+
+function deleteMedication(index) {
+    if(confirm("确定要删除这条提醒吗？")) {
+        const meds = JSON.parse(localStorage.getItem('medications') || '[]');
+        meds.splice(index, 1);
+        localStorage.setItem('medications', JSON.stringify(meds));
+        renderMedications();
+    }
+}
+
+// ================= 2. 首屏引导逻辑 =================
 const guideSteps = [
   { icon: "👋", title: "欢迎使用安心提醒", desc: "这是专为老年人设计的吃药与活动提醒小助手。" },
-  { icon: "⏰", title: "按时提醒", desc: "设定时间后，我们会用大字和声音提醒您按时吃药。" },
-  { icon: "🆘", title: "紧急联系", desc: "遇到特殊情况，一键联系家人或医生。现在开始体验吧！" }
+  { icon: "⏰", title: "按时提醒", desc: "设定时间后，我们会提醒您按时吃药。" },
+  { icon: "🧘", title: "活动筋骨", desc: "久坐提醒您起来做八段锦。现在开始体验吧！" }
 ];
 let currentGuideStep = 0;
 
@@ -20,11 +78,7 @@ function updateGuideUI() {
     dotsContainer.appendChild(dot);
   }
 
-  if(currentGuideStep === guideSteps.length - 1) {
-    document.getElementById('g-btn').innerText = "开始使用";
-  } else {
-    document.getElementById('g-btn').innerText = "下一步";
-  }
+  document.getElementById('g-btn').innerText = (currentGuideStep === guideSteps.length - 1) ? "开始使用" : "下一步";
 }
 
 function nextGuideStep() {
@@ -37,14 +91,14 @@ function nextGuideStep() {
     overlay.style.opacity = '0';
     setTimeout(() => { 
         overlay.style.display = 'none'; 
-        const content = document.getElementById('app-content');
-        if(content) content.style.display = 'block';
+        document.getElementById('app-content').style.display = 'block';
+        renderMedications(); // 渲染药品列表
     }, 500);
     startSedentaryTimer(); 
   }
 }
 
-// ================= 2. 八段锦逻辑 =================
+// ================= 3. 八段锦与音乐逻辑 =================
 const bdjSteps = [
     { title: "第一式：双手托天理三焦", icon: "🙆‍♂️", desc: "双手交叉，向上托举，拉伸腰背。慢慢吸气，慢慢呼气。" },
     { title: "第二式：左右开弓似射雕", icon: "🏹", desc: "双脚分开，像拉弓一样左右伸展，帮助活动肩颈。" },
@@ -55,13 +109,16 @@ let currentBdjStep = 0;
 function startBaduanjin() {
     currentBdjStep = 0;
     updateBdjUI();
-    const bdjOverlay = document.getElementById('baduanjin-overlay');
-    if(bdjOverlay) bdjOverlay.style.display = 'flex';
+    document.getElementById('baduanjin-overlay').style.display = 'flex';
     
+    // 播放音乐（加入错误提示，方便测试）
     const audio = document.getElementById('bdj-music');
     if (audio) {
         audio.currentTime = 0; 
-        audio.play().catch(e => console.log("播放失败:", e)); 
+        audio.play().catch(e => {
+            alert("音乐播放失败，请检查文件是否存在或手机媒体音量。");
+            console.log("播放失败:", e);
+        }); 
     }
 }
 
@@ -85,8 +142,7 @@ function nextBaduanjin() {
 }
 
 function closeBaduanjin() {
-    const bdjOverlay = document.getElementById('baduanjin-overlay');
-    if(bdjOverlay) bdjOverlay.style.display = 'none';
+    document.getElementById('baduanjin-overlay').style.display = 'none';
     
     const audio = document.getElementById('bdj-music');
     if (audio) {
@@ -96,9 +152,8 @@ function closeBaduanjin() {
     startSedentaryTimer(); 
 }
 
-// ================= 3. 久坐定时器逻辑 =================
-// 测试用60秒后提醒。正式上线请改为 45 * 60 * 1000
-const SEDENTARY_TIME = 60 * 1000; 
+// ================= 4. 久坐定时器 =================
+const SEDENTARY_TIME = 60 * 1000; // 测试60秒，正式改 45*60*1000
 let sedentaryTimer;
 
 function startSedentaryTimer() {
@@ -113,13 +168,12 @@ function startSedentaryTimer() {
     }, SEDENTARY_TIME);
 }
 
-// ================= 4. 页面加载初始化 =================
+// ================= 5. 初始化 =================
 window.addEventListener('load', () => {
     if(localStorage.getItem('hasSeenGuide') === 'true') {
-        const guideOverlay = document.getElementById('guide-overlay');
-        if(guideOverlay) guideOverlay.style.display = 'none';
-        const content = document.getElementById('app-content');
-        if(content) content.style.display = 'block';
+        document.getElementById('guide-overlay').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        renderMedications();
         startSedentaryTimer(); 
     } else {
         updateGuideUI();
