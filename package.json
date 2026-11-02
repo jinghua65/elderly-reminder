@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jinghua65/elderly-reminder#readme",
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.6.0",
     "@capacitor/cli": "^8.6.0",
     "@capacitor/core": "^8.6.0"
